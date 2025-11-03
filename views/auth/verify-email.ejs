@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+     <%- include('../partials/header') %>
+   <h1>verify</h1>
+    <% if(user) {%>
+        <p>✅ you are logged in</p>
+        <%}else{%>
+        <p>❌ you are logged in</p>
+        <%}%>
+
+
+        <div>
+    <form action="/resend-verification-link" method="post">
+    <p>email:✉️<%= user.email%></p>
+    <span>
+    <p>your email is not been verify yet.please verify your email by</p>
+       <p> entering the 8 digit code or request a new verification link 
+    </p>
+    </span>
+    <button type="submit">resend verificarion link</button>
+    </form>
+    </div>
+
+
+    <div>
+    <form action="/verify-email-token" method="get">
+        <div>
+            <label for="token"></label>
+            <input type="text" 
+             name="token"
+             id="token"
+             maxlength="8"
+             required
+             placeholder="please enter 8 digit number">
+             <input  type="hidden" value="<%=user.email%>"name="email">
+              <button type="submit">Verify code</button>
+        </div>
+    </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <%- include('../partials/header') %>
+
+    <div class="login">
+        
+        <form action="/register" method="post">
+            <span>
+            <h1>Sign up page</h1>
+            </span>
+            <span>
+            <label for="name">Enter name</label>
+            <input type="text" id="name" name="name" >
+            </span>
+             <span>
+             <label for="email">Enter email</label>
+            <input type="email" id="email" name="email">
+            </span>
+             <span>
+            <label for="password">Enter password</label>
+            <input type="password" id="password" name="password">
+            </span>
+            <span>
+                <%if(errors && errors.length>0){%>
+                    <%errors.forEach((error)=>{%>
+                   <p class="erorr_class"> <%=error%></p>
+                   <%})%>
+                <%}%>
+            </span>
+             <span id="button_span">
+            <button>Register</button>
+            </span>
+            <a href="/login">I have account</a>
+        </form>
+    </div>
+    <%- include('../partials/footer') %>
+</body>
+</html>

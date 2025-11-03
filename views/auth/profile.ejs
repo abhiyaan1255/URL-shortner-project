@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+     <%- include('../partials/header') %>
+    <div>
+       <%= user.name[0].toUpperCase()%>
+    </div>
+    <div>
+    <h1>profile</h1>
+    <p>userId:<%=user.id%></p>
+    <p>name:<%=user.name%></p>
+    <p>email:<%=user.email%></p>
+    <p>created:<%=user.createdAt%></p>
+    <p>links:<%=user.links%></p>
+    </div>
+    <div>
+        <% if(user.isEmailValid) {%>
+            <p>Email:✅Verified</p>
+        <%}else{%>
+            <p>Email:❌Not Verified</p>
+             <a href="/verify-email">Verify Email</a>
+            <%}%>
+         <!-- <a href="/verify-email">Verify Email</a> -->
+    </div>
+    <hr>
+   
+    <button>Change password</button>
+    <button>Change name</button>
+    <button><a href="/logout">logout</a></button>
+</body>
+</html>

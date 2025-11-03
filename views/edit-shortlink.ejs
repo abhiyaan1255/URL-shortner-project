@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/header.css">
+    <title>Document</title>
+</head>
+<body>
+    <%- include('../views/partials/header.ejs') %>
+   
+    <div class="container">
+          <div class="hello">
+    <!-- <% if(user) {%>
+        <p>USER Logged in</p>
+      <%}else{%>
+        <p>USER not logged in</p>
+        <%}%> -->
+        </div>
+        <h1>URL Shortner</h1>
+        <form action="/edit/<%=id%>"" method="post" class="Shortner_form">
+            
+            <div class="inpute_div">
+                <label for="url">Enter url</label>
+                <input type="url" id="url" name="url" value="<%= url%>" required>
+            </div>
+            <div class="inpute_div">
+                <label for="shortCode">Custom short code</label>
+                <input type="text" id="shortCode" name="shortCode" value="<%= shortCode%>" required>
+            </div>
+            
+            <button type="submit" id="Shortner_button" >Update</button>
+            </form>
+            <!-- <h2>Shortend URL,s</h2> -->
+    </div>
+</body>
+</html>
