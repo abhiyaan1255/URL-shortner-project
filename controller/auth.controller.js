@@ -16,7 +16,8 @@ import {authModelgetUserByEmail
       ,insertVerifyEmailToken
      , creatverifyEmailLink
     ,findVerificationEmailToken
-  ,verifyUserEmailAndUpdate} from "../model/auth.model.js"
+  ,verifyUserEmailAndUpdate
+ ,sendNewVerificattionEmailLink} from "../model/auth.model.js"
 import {registerUserSchema,loginUserSchema,verifyEmailSchema} from "../validators/auth-validator.js"
 import {sendEmail} from "../lib/nodemailer.js"
 export const controllRegister= async (req,res) => {
@@ -80,9 +81,10 @@ let {name,email,password}=result.data
     const hashedPassword=await hashPassword(password)
 
     const user = await authModelPostRegister({name,email,password:hashedPassword})
-
+   
     await authanticateUser({req,res,user,name,email})
-  res.redirect("/")
+    await sendNewVerificattionEmailLink({email,userId:user.id})
+return  res.redirect("/")
 }
 
 
@@ -94,8 +96,7 @@ export const getMe=async(req,res)=>{
 }
 
 export const logOutControll= async(req,res)=>{
-  // console.log(req.user.sessionId);
-  
+
   await clearUserSession(req.user.sessionId)
   res.clearCookie("access_token")
   res.clearCookie("refresh_token")
@@ -105,13 +106,11 @@ export const logOutControll= async(req,res)=>{
 
 
 export const getProfilePage=async(req,res)=>{
-    // console.log(req.user.id);
 
 try {
       const user=await findUserById(req.user.id)
-    // console.log(user);
     const userShortLinks= await getAllShortLinks(user.id)
-    // console.log(userShortLinks.length);
+
   if (!user) return res.redirect("/login")
      return res.render("auth/profile",{
     user:{
@@ -138,39 +137,22 @@ user:{
 }
 
 export const resendVerificarionLink=async(req,res)=>{
-  if(!req.user|| req.user.isEmailValid) return res.redirect("/")
-    const randomToken=generateRandomToken()
-  await insertVerifyEmailToken({userId:req.user.id,token:randomToken})
-
-  const verifyEmailLink= await creatverifyEmailLink({
-    email:req.user.email,
-    token:randomToken,
-  })
-  // console.log("verifyEmailLink",verifyEmailLink);
-  sendEmail({
-    to:req.user.email,
-    subject:"Verify your email",
-    html:`<h1>Click the link below to verify your email</h1>
-        <p>you can use this token: <code>${randomToken}</code></p>
-        <a href="${verifyEmailLink}">Verify Email</a>
-        ` 
-  }).catch(console.error)
-  res.redirect("/profile")
-  // res.redirect(`${verifyEmailLink}`)
+  if(!req.user|| req.user.isEmailValid) return res.redirect("/")  
+   await sendNewVerificattionEmailLink({email:req.user.email,userId:req.user.id})
+ return res.redirect("/verify-email")
+ 
 }
 
 
  export const verifyEmailToken=async(req,res)=>{
   const {data,error}= verifyEmailSchema.safeParse(req.query)
-  // console.log(data);
+ 
   if(error){
     res.send("Verification link invalid or expired")
   }
   const Token= await findVerificationEmailToken(data)
-  // console.log(Token);
   if(!Token) return res.send("Verification link invalid or expired")
-    await verifyUserEmailAndUpdate(Token.email)
-  // res.send(`<h1>${data.email}verify email token</h1>`)
+    await verifyUserEmailAndUpdate(data.email)
   res.redirect("profile")
   
 }

@@ -1,10 +1,14 @@
 import { db } from "../config/db.js";
 import {sessionsTable, shortLinksTable, usersTable,verifyEmailTokensTable} from "../drizzle/schema.js"
 import { and, eq,gte,lt,sql } from "drizzle-orm";
+import ejs from "ejs"
 import  argon2  from "argon2";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
-import { error } from "console";
+import {sendEmail} from "../lib/send-email.js";
+import fs from "fs/promises"
+import path from "path";
+import mjml2html from "mjml";
 // import {usersTable} from "../drizzle/schema.js"
 export const authModelPostRegister=async({name,email,password})=>{
   const [user]= await db.insert(usersTable).values({
@@ -123,7 +127,7 @@ export const clearUserSession=async(sessionId)=>{
 
 export const authanticateUser=async({req,res,userExist,user,name,email})=>{
   
-  console.log(userExist?.id);
+  // console.log(userExist?.id);
   
   const session = await createSession(userExist?.id || user.id,{
     ip:req.clientIp,
@@ -196,35 +200,75 @@ url.searchParams.append("email",email)
 return url.toString();
 }
 
+export const sendNewVerificattionEmailLink=async({userId,email})=>{
+  const randomToken=generateRandomToken()
+  await insertVerifyEmailToken({userId,token:randomToken})
+
+  const verifyEmailLink= await creatverifyEmailLink({
+    email:email,
+    token:randomToken,
+  })
+  // console.log("verifyEmailLink",verifyEmailLink);
+
+  //read mjml file
+  const mjmlTemplate= await fs.readFile(path.join(import.meta.dirname,"..","email","verify-email.mjml"),"utf-8")
+ // replace the placholder realvalue
+ const filledTemplate=ejs.render(mjmlTemplate,{
+  code:randomToken,
+  link:verifyEmailLink
+ })
+ // convert in html
+ const htmlOutPut=mjml2html(filledTemplate).html;
+  
+  await sendEmail({
+    to:email,
+    subject:"Verify your email",
+    html:htmlOutPut 
+  }).catch(console.error)
+}
+
+
 export const findVerificationEmailToken=async({email,token})=>{
-const data= await db.select({
-  userId:verifyEmailTokensTable.userId,
-  token:verifyEmailTokensTable.token,
-  expiresAt:verifyEmailTokensTable.expiresAt
- }).from(verifyEmailTokensTable)
-   .where(
-    and(
+// const data= await db.select({
+//   userId:verifyEmailTokensTable.userId,
+//   token:verifyEmailTokensTable.token,
+//   expiresAt:verifyEmailTokensTable.expiresAt
+//  }).from(verifyEmailTokensTable)
+//    .where(
+//     and(
+//     eq(verifyEmailTokensTable.token,token),
+//     gte(verifyEmailTokensTable.expiresAt,sql`CURRENT_TIMESTAMP`)
+//     )
+//   ).catch(error.message)
+//   // console.log(data.length);
+//   if(!data.length) return null
+//   const userId=data[0].userId
+//   const userData=await db.select({
+//     userId:usersTable.id,
+//     email:usersTable.email,
+//   }).from(usersTable)
+//     .where(eq(usersTable.id,userId))
+//   if (!userData.length){
+//     return null
+//   }
+//   return{
+//     userId:userData[0].userId,
+//     email:userData[0].email,
+//     token:data[0].token,
+//     expiresAt:data[0].expiresAt
+//   }
+
+return await db.select({
+  userId:usersTable.id,
+  email:usersTable.email,
+  token:verifyEmailTokensTable.id,
+  expiresAt:verifyEmailTokensTable.expiresAt,
+}).from(verifyEmailTokensTable)
+  .where(and(
     eq(verifyEmailTokensTable.token,token),
+    eq(usersTable.email,email),
     gte(verifyEmailTokensTable.expiresAt,sql`CURRENT_TIMESTAMP`)
-    )
-  ).catch(error.message)
-  // console.log(data.length);
-  if(!data.length) return null
-  const userId=data[0].userId
-  const userData=await db.select({
-    userId:usersTable.id,
-    email:usersTable.email,
-  }).from(usersTable)
-    .where(eq(usersTable.id,userId))
-  if (!userData.length){
-    return null
-  }
-  return{
-    userId:userData[0].userId,
-    email:userData[0].email,
-    token:data[0].token,
-    expiresAt:data[0].expiresAt
-  }
+  )).innerJoin(usersTable,eq(verifyEmailTokensTable.userId,usersTable.id))
 }
 
 export const verifyUserEmailAndUpdate=async(email)=>{
