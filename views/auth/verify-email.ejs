@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
      <%- include('../partials/header') %>
-   <h1>verify</h1>
+     <div class="container">
+   <h1>Email verify page</h1>
+
     <% if(user) {%>
         <p>✅ you are logged in</p>
         <%}else{%>
@@ -16,22 +19,22 @@
 
 
         <div>
-    <form action="/resend-verification-link" method="post">
+    <form action="/resend-verification-link" method="post" class="Shortner_form">
     <p>email:✉️<%= user.email%></p>
     <span>
-    <p>your email is not been verify yet.please verify your email by</p>
-       <p> entering the 8 digit code or request a new verification link 
-    </p>
+        <ul>
+   <li class="urls_li"><p>your email is not been verify yet.please verify your email by entering the 8 digit code or request a new verification link </p> </li> 
+    </ul>
     </span>
-    <button type="submit">resend verificarion link</button>
+    <button type="submit" id="Shortner_button">resend verificarion link</button>
     </form>
     </div>
 
 
     <div>
-    <form action="/verify-email-token" method="get">
-        <div>
-            <label for="token"></label>
+    <form action="/verify-email-token" method="get" class="Shortner_form">
+        <div class="inpute_div">
+            <label for="token">Enter OTP</label>
             <input type="text" 
              name="token"
              id="token"
@@ -39,9 +42,11 @@
              required
              placeholder="please enter 8 digit number">
              <input  type="hidden" value="<%=user.email%>"name="email">
-              <button type="submit">Verify code</button>
+              
         </div>
+        <button type="submit" id="Shortner_button">Verify code</button>
     </form>
+    </div>
     </div>
 </body>
 </html>

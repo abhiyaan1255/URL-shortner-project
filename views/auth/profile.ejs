@@ -4,19 +4,25 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
      <%- include('../partials/header') %>
+      <div class="container">
+        <h1>Profile Page</h1>
     <div>
+        
        <%= user.name[0].toUpperCase()%>
     </div>
     <div>
-    <h1>profile</h1>
-    <p>userId:<%=user.id%></p>
-    <p>name:<%=user.name%></p>
-    <p>email:<%=user.email%></p>
-    <p>created:<%=user.createdAt%></p>
-    <p>links:<%=user.links%></p>
+        <ul>
+    
+    <!-- <p>userId:<%=user.id%></p> -->
+   <li class="urls_li"><p>name:<%=user.name%></p></li> 
+   <li class="urls_li"><p>email:<%=user.email%></p></li> 
+   <li class="urls_li"><p>created:<%=user.createdAt%></p></li> 
+   <li class="urls_li"><p>links:<%=user.links%></p></li> 
+    </ul>
     </div>
     <div>
         <% if(user.isEmailValid) {%>
@@ -28,9 +34,11 @@
          <!-- <a href="/verify-email">Verify Email</a> -->
     </div>
     <hr>
-   
-    <button>Change password</button>
-    <button>Change name</button>
-    <button><a href="/logout">logout</a></button>
+    <div class="buttons_div">
+    <button id="Shortner_button"><a href="/edit-password">Change password</a></button>
+    <button id="Shortner_button"><a href="/edit-profile">Change name</a></button>
+    <button id="Shortner_button"><a href="/logout">logout</a></button>
+    </div>
+    </div>
 </body>
 </html>

@@ -107,3 +107,8 @@ label{
 #url_second_div a{
     text-decoration: none;
 }
+.buttons_div{
+    display: flex;
+    /* background-color: red; */
+    flex-direction: column;
+}

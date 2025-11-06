@@ -1,5 +1,5 @@
 import { db } from "../config/db.js";
-import {sessionsTable, shortLinksTable, usersTable,verifyEmailTokensTable} from "../drizzle/schema.js"
+import {passwordResetTokensTable, sessionsTable, shortLinksTable, usersTable,verifyEmailTokensTable} from "../drizzle/schema.js"
 import { and, eq,gte,lt,sql } from "drizzle-orm";
 import ejs from "ejs"
 import  argon2  from "argon2";
@@ -9,6 +9,7 @@ import {sendEmail} from "../lib/send-email.js";
 import fs from "fs/promises"
 import path from "path";
 import mjml2html from "mjml";
+import { email } from "zod";
 // import {usersTable} from "../drizzle/schema.js"
 export const authModelPostRegister=async({name,email,password})=>{
   const [user]= await db.insert(usersTable).values({
@@ -27,8 +28,14 @@ export const authModelgetUserByEmail=async(email)=>{
 }
 
 export const authPostPassExist=async({password,hash})=>{
-    // in argon 2 hash password always comes first
+  try {
+     // in argon 2 hash password always comes first
    return argon2.verify(hash,password)
+  } catch (error) {
+   console.log("argon  verify errorr",error);
+    
+  }
+   
 }
 
 export const hashPassword=async(password)=>{
@@ -275,4 +282,63 @@ export const verifyUserEmailAndUpdate=async(email)=>{
  await db.update(usersTable)
          .set({isEmailValid:true})
          .where(eq(usersTable.email,email))
+}
+
+export const editProfileNameById=async({newName,id})=>{
+  await db.update(usersTable).set(usersTable.name=newName).where(eq(usersTable.id,id))
+}
+
+export const editPassById=async({userId,password})=>{
+  await db.update(usersTable).set({password:password}).where(eq(usersTable.id,userId))
+}
+
+export const findUserByEmail=async(email)=>{
+ const [data]= await db.select().from(usersTable).where(eq(usersTable.email,email))
+ return data
+}
+
+export const insertPassWordResetToken=async({userId,token})=>{
+  // await db.transaction((tx)=>{
+    try {
+      await db.transaction(async(tx)=>{
+    await tx.delete(passwordResetTokensTable).where(eq(passwordResetTokensTable.userId,userId));
+     await  tx.insert(passwordResetTokensTable).values({userId,tokenHash:token});
+       })
+    } catch (error) {
+      console.log("Failed to insert password reset token",error);
+    throw new Error ("Unable to create a verification ")
+    }
+
+}
+
+export const createResendPasswordLink=async(userId)=>{
+const rendomToken=crypto.randomBytes(32).toString("hex")
+ const hashToken= crypto.createHash("sha256").update(rendomToken).digest("hex")
+ await insertPassWordResetToken({userId,token:hashToken})
+ return `${process.env.FRONTEND_URL}reset-password/${rendomToken}`
+}
+
+export const findResendPasswordToken=async(token)=>{
+  try {
+     const tokenHash= crypto.createHash("sha256").update(token).digest("hex")
+  console.log("rokenhash",tokenHash);
+  
+  const [data]= await db.select().from(passwordResetTokensTable).where(
+    and(
+  eq(passwordResetTokensTable.tokenHash,tokenHash),
+  gte(passwordResetTokensTable.expiresAt,sql`CURRENT_TIMESTAMP`)
+    )
+    )
+    console.log("data",data);
+    return data
+  } catch (error) {
+    console.log("Token not found and expired",error);
+  }
+ 
+}
+
+export const clearForgetPasswordToken=async(userId)=>{
+await db.delete(passwordResetTokensTable).where(passwordResetTokensTable.userId,userId)
+
+
 }
