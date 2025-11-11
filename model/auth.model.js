@@ -1,5 +1,5 @@
 import { db } from "../config/db.js";
-import {passwordResetTokensTable, sessionsTable, shortLinksTable, usersTable,verifyEmailTokensTable} from "../drizzle/schema.js"
+import {passwordResetTokensTable, sessionsTable, shortLinksTable, usersTable,verifyEmailTokensTable, oauthAccountsTable} from "../drizzle/schema.js"
 import { and, eq,gte,lt,sql } from "drizzle-orm";
 import ejs from "ejs"
 import  argon2  from "argon2";
@@ -284,8 +284,8 @@ export const verifyUserEmailAndUpdate=async(email)=>{
          .where(eq(usersTable.email,email))
 }
 
-export const editProfileNameById=async({newName,id})=>{
-  await db.update(usersTable).set(usersTable.name=newName).where(eq(usersTable.id,id))
+export const editProfileNameById=async({newName,id,avatarUrl})=>{
+  await db.update(usersTable).set({name:newName,avatarUrl:avatarUrl}).where(eq(usersTable.id,id))
 }
 
 export const editPassById=async({userId,password})=>{
@@ -321,7 +321,7 @@ const rendomToken=crypto.randomBytes(32).toString("hex")
 export const findResendPasswordToken=async(token)=>{
   try {
      const tokenHash= crypto.createHash("sha256").update(token).digest("hex")
-  console.log("rokenhash",tokenHash);
+  // console.log("rokenhash",tokenHash);
   
   const [data]= await db.select().from(passwordResetTokensTable).where(
     and(
@@ -339,6 +339,78 @@ export const findResendPasswordToken=async(token)=>{
 
 export const clearForgetPasswordToken=async(userId)=>{
 await db.delete(passwordResetTokensTable).where(passwordResetTokensTable.userId,userId)
+}
 
+export async function getUserWithOauthId({ email, provider }) {
+  const [user] = await db
+    .select({
+      id: usersTable.id,
+      name: usersTable.name,
+      email: usersTable.email,
+      isEmailValid: usersTable.isEmailValid,
+      providerAccountId: oauthAccountsTable.providerAccountId,
+      provider: oauthAccountsTable.provider,
+    })
+    .from(usersTable)
+    .where(eq(usersTable.email, email))
+    .leftJoin(
+      oauthAccountsTable,
+      and(
+        eq(oauthAccountsTable.provider, provider),
+        eq(oauthAccountsTable.userId, usersTable.id)
+      )
+    );
 
+  return user;
+}
+
+export async function linkUserWithOauth({
+  userId,
+  provider,
+  providerAccountId,
+  // avatarUrl,
+}) {
+  await db.insert(oauthAccountsTable).values({
+    userId,
+    provider,
+    providerAccountId,
+  });
+}
+
+export async function createUserWithOauth({
+  name,
+  email,
+  provider,
+  providerAccountId,
+  password,
+}) {
+  const user = await db.transaction(async (trx) => {
+    const [user] = await trx
+      .insert(usersTable)
+      .values({
+        email,
+        name,
+        // password: "",
+        password,
+        isEmailValid: true, // we know that google's and github email are valid
+      })
+      .$returningId();
+
+    await trx.insert(oauthAccountsTable).values({
+      provider,
+      providerAccountId,
+      userId: user.id,
+    });
+
+    return {
+      id: user.id,
+      name,
+      email,
+      isEmailValid: true, // not necessary
+      provider,
+      providerAccountId,
+    };
+  });
+
+  return user;
 }

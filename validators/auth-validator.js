@@ -29,7 +29,7 @@ export const verifyEmailAndTokenSchema=z.object({
 })
 
 export const userSchema=z.object({
-    name:z.string()
+    name:z.string({message:"Name must be string"})
     .trim()
     .min(5,{message:"Name must be 5 charaters long"})
     .max(20,{message:"Name must be not more thane 20 characters"})

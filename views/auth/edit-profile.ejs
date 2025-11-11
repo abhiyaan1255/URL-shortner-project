@@ -10,7 +10,15 @@
      <%- include('../partials/header') %>
     <div class="container">
         <h1>Change your profile name</h1>
-        <form action="/edit-profile" method="post" class="Shortner_form">
+        <form action="/edit-profile" method="post" class="Shortner_form"
+         enctype="multipart/form-data" > 
+         <div>
+         
+
+            <div>
+                <label for="profile">profile</label>
+                <input type="file" name="avatar" accept="image/*">
+            </div>
             <div class="inpute_div ">
         <label for="name">name</label>
         <input type="text" name="name" id="name" value="<%=  name%>">

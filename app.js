@@ -15,6 +15,7 @@ app.use(session({secret:process.env.MY_SECRATE,resave:true,saveUninitialized:fal
 app.use(express.json());
 
 app.set("view engine","ejs")
+app.use(express.static("public"));
 app.use(express.static(path.join(import.meta.dirname,"style")))
 app.use(cookieParser())
 

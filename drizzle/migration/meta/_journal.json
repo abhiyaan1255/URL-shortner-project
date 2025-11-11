@@ -22,6 +22,20 @@
       "when": 1762325546017,
       "tag": "0002_lean_blazing_skull",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1762601406519,
+      "tag": "0003_square_human_torch",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1762684297534,
+      "tag": "0004_yummy_quicksilver",
+      "breakpoints": true
     }
   ]
 }

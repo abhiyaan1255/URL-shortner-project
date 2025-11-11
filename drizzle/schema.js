@@ -1,8 +1,6 @@
-// import { timestamp } from 'drizzle-orm/gel-core';
 import {  relations, sql } from 'drizzle-orm';
-// import { text } from 'drizzle-orm/gel-core';
-import { text ,boolean,int, mysqlTable, serial, varchar,timestamp } from 'drizzle-orm/mysql-core';
-// import { boolean } from 'zod';
+import { text ,boolean,int, mysqlTable, serial, varchar,timestamp, mysqlEnum } from 'drizzle-orm/mysql-core';
+
 
 export const shortLinksTable = mysqlTable('short_link', {
   id: int().autoincrement().primaryKey(),
@@ -56,12 +54,22 @@ export const usersTable = mysqlTable('users', {
   id: int().autoincrement().primaryKey(),
  name :varchar({length:255}).notNull(),
  email:varchar({length:255}).notNull().unique(),
+ avatarUrl:text("avatar_url"),
  isEmailValid:boolean("is_email_valid").default(false).notNull(), 
  password:varchar({length:255}).notNull(),
  createdAt:timestamp("created_at").notNull().defaultNow(),
  updatedAt:timestamp("updated_at").defaultNow().notNull()
 });
 
+export const oauthAccountsTable=mysqlTable("oauthAccounts",{
+  id:int("id").autoincrement().primaryKey(),
+  userId:int("user_id").notNull()
+     .references(()=>usersTable.id,{onDelete:"cascade"}),
+  provider:mysqlEnum("provider",["google","github"]).notNull(),
+  providerAccountId:varchar("provide_account_id",{length:255})
+    .notNull().unique(),
+  createdAt:timestamp("created_at").notNull().defaultNow(),
+})
 export const userRelation=relations(usersTable,({many})=>({
   shortLink:many(shortLinksTable),
   session:many(sessionsTable)
